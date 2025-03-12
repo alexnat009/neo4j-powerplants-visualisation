@@ -30,5 +30,8 @@ For accessing `powerplant.dump` or any questions or further information, please 
 
 #### Example of dashboards
 Visualizing the number of power plants across different countries
-![2025-03-12 17 03 42](https://github.com/user-attachments/assets/94b9e3fe-e978-4845-b3ca-e0a74b77c381)
-![2025-03-12 17 03 51](https://github.com/user-attachments/assets/ffb56726-18bb-4fee-907e-644287c4ad2a)
+
+<img src="https://github.com/user-attachments/assets/94b9e3fe-e978-4845-b3ca-e0a74b77c381" width="500">
+
+<img src="https://github.com/user-attachments/assets/ffb56726-18bb-4fee-907e-644287c4ad2a" width="500">
+
