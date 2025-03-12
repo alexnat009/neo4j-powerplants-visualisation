@@ -1,0 +1,392 @@
+{
+  "title": "Power plant visualisation",
+  "version": "2.4",
+  "settings": {
+    "pagenumber": 0,
+    "editable": true,
+    "fullscreenEnabled": false,
+    "parameters": {
+      "neodash_year_year": 2015,
+      "neodash_year_year_display": 2015,
+      "neodash_powerplant_name": "Rioni Hydroelectric Power Plant Georgia",
+      "neodash_powerplant_name_display": "Rioni Hydroelectric Power Plant Georgia",
+      "neodash_powerplant_nodes": "",
+      "neodash_powerplant_nodes_display": "",
+      "neodash_country_name": "ALB",
+      "neodash_country_name_display": "ALB",
+      "neodash_country_name_long": "Georgia",
+      "neodash_country_name_long_display": "Georgia",
+      "neodash_country_name_long_2": "Georgia",
+      "neodash_country_name_long_2_display": "Georgia"
+    },
+    "theme": "dark",
+    "disableRowLimiting": true
+  },
+  "pages": [
+    {
+      "title": "Main Page",
+      "reports": [
+        {
+          "id": "daf7122c-111a-47a1-bae7-4551b0407b68",
+          "title": "Number of powerplant globally",
+          "query": "MATCH (p:Powerplant)-[:LOCATED_IN]->(c:Country)\nRETURN c.name AS Country, COUNT(p) AS NumberOfPowerplants\nORDER BY NumberOfPowerplants DESC",
+          "width": 12,
+          "height": 5,
+          "x": 12,
+          "y": 4,
+          "type": "pie",
+          "selection": {
+            "index": "Country",
+            "value": "NumberOfPowerplants",
+            "key": "(none)"
+          },
+          "settings": {
+            "legend": false,
+            "sortByValue": true,
+            "arcLabelsSkipAngle": 10,
+            "arcLinkLabelsSkipAngle": 10,
+            "cornerRadius": 10,
+            "enableArcLabels": true
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "a1f0f900-4818-4501-ae3e-d30dc6fe29af",
+          "title": "Distribution of Powerplants",
+          "query": "WITH $neodash_country_name_long AS countryName\n\nCALL apoc.do.when(\n  countryName = 'Worldwide',\n  // true case\n  '\n  MATCH (p:Powerplant) -[:LOCATED_IN] ->(c:Country)\n  RETURN p\n  ',\n  // false case\n  '\n  MATCH (p:Powerplant)-[:LOCATED_IN]->(c:Country)\n  WHERE c.name_long = countryName\n  RETURN p\n  ',\n  {countryName: countryName}\n) YIELD value AS result\nRETURN result.p",
+          "width": 12,
+          "height": 4,
+          "x": 0,
+          "y": 0,
+          "type": "map",
+          "selection": {
+            "Powerplant": "(no label)"
+          },
+          "settings": {
+            "layerType": "markers",
+            "defaultNodeSize": "small",
+            "separateOverlappingMarkers": true,
+            "clusterMarkers": true
+          },
+          "schema": [
+            [
+              "Powerplant",
+              "name",
+              "location",
+              "commissioning_year",
+              "gppd_idnr",
+              "capacity"
+            ]
+          ],
+          "database": "powerplant"
+        },
+        {
+          "id": "32514ab8-3518-4f79-b48f-d0b82a35dce3",
+          "title": "Choose Power plant",
+          "query": "MATCH (n:`Powerplant`) \nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 5",
+          "width": 7,
+          "height": 3,
+          "x": 0,
+          "y": 11,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Node Property",
+            "entityType": "Powerplant",
+            "propertyType": "name",
+            "propertyTypeDisplay": "name",
+            "parameterName": "neodash_powerplant_name"
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "3328b081-6a77-43a4-bc0d-d3949e730712",
+          "title": "Estimated Generated Energy",
+          "query": "MATCH (p:Powerplant)-[e:GENERATES_IN]-(y:Year)\nwhere p.name = $neodash_powerplant_name\nRETURN y.year AS Year, e.estimated_gwh AS EstimatedGWh, e.generated_gwh as GeneratedGwh\nORDER BY Year\n",
+          "width": 17,
+          "height": 5,
+          "x": 7,
+          "y": 11,
+          "type": "line",
+          "selection": {
+            "x": "Year",
+            "value": [
+              "EstimatedGWh",
+              "GeneratedGwh"
+            ]
+          },
+          "settings": {
+            "legend": true,
+            "xScale": "point"
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "f5d6e605-ca6b-4e3d-b73a-88ce1dbbce20",
+          "title": "Total Capacity of Power plant by countries",
+          "query": "MATCH (p:Powerplant)-[:LOCATED_IN]->(c:Country)\nWITH c.name_long AS cou, SUM(p.capacity) AS TotalCapacity\nRETURN cou, TotalCapacity\nORDER BY TotalCapacity DESC limit 50\n\n\n",
+          "width": 24,
+          "height": 5,
+          "x": 0,
+          "y": 20,
+          "type": "bar",
+          "selection": {
+            "index": "cou",
+            "value": "TotalCapacity",
+            "key": "(none)"
+          },
+          "settings": {
+            "showOptionalSelections": false,
+            "labelSkipWidth": 2000,
+            "labelSkipHeight": 2000,
+            "hideSelections": true
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "6d5581bd-aa65-4bee-919b-10ac4ef2c0a1",
+          "title": "Sum of estimated energy of given Powerplant (GWh)",
+          "query": "match (p:Powerplant) -[e:GENERATES_IN] ->(year:Year) where p.name = $neodash_powerplant_name return sum(e.estimated_gwh)",
+          "width": 12,
+          "height": 2,
+          "x": 12,
+          "y": 9,
+          "type": "value",
+          "selection": {},
+          "settings": {},
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "cffac937-0a9f-4538-8a79-1231ffbb1036",
+          "title": "Heatmap distribution of Powerplants",
+          "query": "match (p:Powerplant) -[:LOCATED_IN] ->(c:Country)  return p",
+          "width": 12,
+          "height": 4,
+          "x": 12,
+          "y": 0,
+          "type": "map",
+          "selection": {
+            "Powerplant": "(no label)"
+          },
+          "settings": {
+            "layerType": "heatmap",
+            "nodeColorScheme": "nivo",
+            "defaultNodeSize": "small",
+            "separateOverlappingMarkers": true
+          },
+          "schema": [
+            [
+              "Powerplant",
+              "commissioning_year",
+              "gppd_idnr",
+              "name",
+              "location",
+              "capacity"
+            ]
+          ],
+          "database": "powerplant"
+        },
+        {
+          "id": "5b9c66da-810e-4feb-8eac-b9c89f0b2692",
+          "title": "Electrical Generating Capacity by Countries and Fuel type",
+          "query": "MATCH (f:FuelType)\nOPTIONAL MATCH (f)<-[:PRIMARY_FUEL]-(p:Powerplant)-[:LOCATED_IN]->(c:Country {name_long: \"Georgia\"})\nWITH f, sum(coalesce(p.capacity, 0)) as Georgia\nOPTIONAL MATCH (f)<-[:PRIMARY_FUEL]-(p:Powerplant)-[:LOCATED_IN]->(c:Country {name_long: \"Finland\"})\nWITH f, Georgia, sum(coalesce(p.capacity, 0)) as Finland\nOPTIONAL MATCH (f)<-[:PRIMARY_FUEL]-(p:Powerplant)-[:LOCATED_IN]->(c:Country {name_long: \"Iceland\"})\nWITH f, Georgia, Finland, sum(coalesce(p.capacity, 0)) as Iceland\nOPTIONAL MATCH (f)<-[:PRIMARY_FUEL]-(p:Powerplant)-[:LOCATED_IN]->(c:Country {name_long: \"Hungary\"})\nWITH f, Georgia, Finland, Iceland, sum(coalesce(p.capacity, 0)) as Hungary\nOPTIONAL MATCH (f)<-[:PRIMARY_FUEL]-(p:Powerplant)-[:LOCATED_IN]->(c:Country {name_long: \"Albania\"})\nRETURN f.Fuel as Fuel, Georgia, Finland, Iceland, Hungary, sum(coalesce(p.capacity, 0)) as Albania",
+          "width": 13,
+          "height": 5,
+          "x": 0,
+          "y": 25,
+          "type": "radar",
+          "selection": {
+            "index": "Fuel",
+            "values": [
+              "Finland",
+              "Albania",
+              "Hungary",
+              "Iceland",
+              "Georgia"
+            ]
+          },
+          "settings": {
+            "marginTop": 100,
+            "marginBottom": 100,
+            "marginLeft": 100,
+            "marginRight": 100,
+            "legend": true,
+            "colors": "category10"
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "50b53f66-3337-44eb-a664-c03d835ed8bd",
+          "title": "How many Power plants are in countries",
+          "query": "match (c:Country) <- [:LOCATED_IN] - (p:Powerplant)\nreturn (c.name), count(p)",
+          "width": 12,
+          "height": 5,
+          "x": 0,
+          "y": 6,
+          "type": "choropleth",
+          "selection": {
+            "index": "(c.name)",
+            "value": "count(p)",
+            "key": "(none)"
+          },
+          "settings": {
+            "matchAccessor": "iso_a3",
+            "projectionScale": 100
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "e5d5bf9b-6ba9-4f16-86e7-a61a3515153d",
+          "title": "Primary Fuel Type",
+          "query": "match (p:Powerplant) -[:PRIMARY_FUEL] -> (f:FuelType)\nwhere p.name = $neodash_powerplant_name\nreturn f.Fuel\n\n",
+          "width": 7,
+          "height": 2,
+          "x": 0,
+          "y": 14,
+          "type": "value",
+          "selection": {},
+          "settings": {},
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "7c29e0f0-42fa-4ca3-acba-9a91fc793b47",
+          "title": "Choose a country",
+          "query": "MATCH (n:`Country`) \nWHERE toLower(toString(n.`name_long`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name_long` as value,  n.`name_long` as display ORDER BY size(toString(value)) ASC LIMIT 5",
+          "width": 12,
+          "height": 2,
+          "x": 0,
+          "y": 4,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Node Property",
+            "entityType": "Country",
+            "defaultValue": "Worldwide",
+            "propertyType": "name_long",
+            "propertyTypeDisplay": "name_long",
+            "parameterName": "neodash_country_name_long"
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "74bee2ff-093d-41a8-b2e3-9dccdaf56b14",
+          "title": "Contribution of Given Power Plant to Country's Total Capacity",
+          "query": "MATCH (plant:Powerplant {name: $neodash_powerplant_name})-[:LOCATED_IN]->(country:Country)\nWITH plant, country\n\n// Calculate total capacity of power plants in the same location (country)\nMATCH (otherPlant:Powerplant)-[:LOCATED_IN]->(country)\nWITH plant, country, sum(otherPlant.capacity) AS totalCapacityInCountry\n\n// Calculate the specific power plant's contribution as a percentage\nWITH plant, country, totalCapacityInCountry, plant.capacity AS plantCapacity\nRETURN \n       (plantCapacity / totalCapacityInCountry) * 100 AS ContributionPercentage\n",
+          "width": 7,
+          "height": 4,
+          "x": 0,
+          "y": 16,
+          "type": "gauge",
+          "selection": {},
+          "settings": {
+            "nrOfLevels": 5
+          },
+          "schema": [],
+          "database": "powerplant"
+        },
+        {
+          "id": "74edc0f5-dd76-45a5-afe9-56056799d120",
+          "title": "How close was Countries estimations by year",
+          "query": "MATCH (n:Country)<-[:LOCATED_IN]-(p:Powerplant)-[g:GENERATES_IN]->(y:Year)\nwith y.year AS year, n.name_long AS name, SUM(g.estimated_gwh) AS estimation, SUM(g.generation_gwh) AS actual,g.estimated_method as method\nRETURN name , year, abs(estimation - actual) as `estimation correctnes`, method\nORDER BY name, year limit 100",
+          "width": 11,
+          "height": 5,
+          "x": 13,
+          "y": 25,
+          "type": "table",
+          "selection": {},
+          "settings": {},
+          "database": "powerplant",
+          "schema": []
+        },
+        {
+          "id": "c1254160-aee5-4f94-b6c8-011a5cb553a0",
+          "title": "Fuel types and corresponding Powerplants in that country",
+          "query": "match (c:Country {name_long:$neodash_country_name_long_2}) <- [r:LOCATED_IN] - (p:Powerplant) - [r1:PRIMARY_FUEL] -> (f:FuelType)\nreturn r,p,r1,f",
+          "width": 17,
+          "height": 6,
+          "x": 7,
+          "y": 30,
+          "type": "graph",
+          "selection": {
+            "LOCATED_IN": "(label)",
+            "Powerplant": "name",
+            "PRIMARY_FUEL": "(label)",
+            "FuelType": "Fuel"
+          },
+          "settings": {},
+          "schema": [
+            [
+              "LOCATED_IN"
+            ],
+            [
+              "Powerplant",
+              "commissioning_year",
+              "gppd_idnr",
+              "name",
+              "location",
+              "capacity"
+            ],
+            [
+              "PRIMARY_FUEL"
+            ],
+            [
+              "FuelType",
+              "Fuel"
+            ]
+          ],
+          "database": "powerplant"
+        },
+        {
+          "id": "6c6ec953-f397-4b40-850b-323c4e9d8bd6",
+          "title": "Choose a country",
+          "query": "MATCH (n:`Country`) \nWHERE toLower(toString(n.`name_long`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name_long` as value,  n.`name_long` as display ORDER BY size(toString(value)) ASC LIMIT 5",
+          "width": 7,
+          "height": 3,
+          "x": 0,
+          "y": 30,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Node Property",
+            "entityType": "Country",
+            "propertyType": "name_long",
+            "propertyTypeDisplay": "name_long",
+            "parameterName": "neodash_country_name_long_2",
+            "id": "2",
+            "defaultValue": "Georgia"
+          },
+          "schema": [],
+          "database": "powerplant"
+        }
+      ]
+    }
+  ],
+  "parameters": {},
+  "extensions": {
+    "active": true,
+    "activeReducers": [],
+    "advanced-charts": {
+      "active": true
+    },
+    "styling": {
+      "active": true
+    },
+    "actions": {
+      "active": true
+    },
+    "query-translator": {},
+    "forms": {
+      "active": true
+    }
+  },
+  "uuid": "e2812cac-ec13-4327-afd2-c99326019acb"
+}
