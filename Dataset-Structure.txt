@@ -1,0 +1,57 @@
+Powerplant { 
+	gppd_idnr: String
+	name: String
+	capacity: Float
+	commisioning_year: Integer
+	location: point(lognitude: Float, latitude: Float)
+}
+FuelType {
+	Fuel: String
+}
+Owner {
+	name: String
+}
+Country {
+	name: String
+	name_long: String
+}
+
+Year {
+	year: Integer
+}
+powerplant - [:GENERATES_IN {generation_gwh: Float,estimated_gwh: Float, estimated_method: String}]-> Year
+powerplant - [:PRIMARY_FUEL]-> FuelType
+powerplant - [:LOCATED_IN]-> Country
+powerplant - [:IS_OWNED_BY]-> Company
+
+
+LOAD CSV WITH HEADERS FROM 'file:///data.csv' AS line
+
+// Creating Powerplant nodes
+MERGE (p:Powerplant {
+    gppd_idnr: line.gppd_idnr,
+    name: line.name,
+    capacity: toFloat(line.capacity_mw),
+    commissioning_year: toInteger(line.commissioning_year),
+    location: point({latitude: toFloat(line.latitude), longitude: toFloat(line.longitude)})
+})
+
+// Creating FuelType, Owner, and Country nodes
+MERGE (f:FuelType {Fuel: line.primary_fuel})
+MERGE (o:Owner {name: line.owner})
+MERGE (c:Country {name: line.country})
+
+// Creating Year nodes and relationships
+WITH line, p
+UNWIND range(2013, 2019) AS year
+MERGE (y:Year {year: year})
+MERGE (p)-[:GENERATES_IN {
+    generation_gwh: toFloat(line["generation_gwh_" + toString(year)]),
+    estimated_gwh: toFloat(line["estimated_generation_gwh_" + toString(year)]),
+    estimated_method: line["estimated_generation_note_" + toString(year)]
+}]->(y)
+
+// Creating relationships between Powerplant and other nodes
+MERGE (p)-[:PRIMARY_FUEL]->(f)
+MERGE (p)-[:LOCATED_IN]->(c)
+MERGE (p)-[:IS_OWNED_BY]->(o)
