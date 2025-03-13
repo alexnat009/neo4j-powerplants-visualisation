@@ -35,3 +35,9 @@ Visualizing the number of power plants across different countries
 
 <img src="https://github.com/user-attachments/assets/ffb56726-18bb-4fee-907e-644287c4ad2a" width="500">
 
+
+
+
+### References  
+- Awesome Public Datasets: [https://github.com/awesomedata/awesome-public-datasets](https://github.com/awesomedata/awesome-public-datasets)
+
